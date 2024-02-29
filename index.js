@@ -13,8 +13,8 @@ res.sendFile(path.join(__dirname, 'index.html'));
 
 app.get("/api/flavor", async (req, res, next) => {
     try {
-      res.send((await client.query("SELECT * FROM flavor")).rows);
-      const SQL = "SELECT * FROM flavor";
+    //   res.send((await client.query("SELECT * FROM flavor")).rows);
+      const SQL = `SELECT * FROM flavor`;
       const response = await client.query(SQL);
       res.send(response.rows);
     } catch (ex) {
@@ -24,13 +24,13 @@ app.get("/api/flavor", async (req, res, next) => {
 
   app.post("/api/flavor", async (req, res, next) => {
     try {
-      res.send(
-        (
-          await client.query("INSERT INTO flavor(name) VALUES($1) RETURNING *", [
-            req.body.name,
-          ])
-        ).rows[0]
-      );
+    //   res.send(
+    //     (
+    //       await client.query("INSERT INTO flavor(name) VALUES($1) RETURNING *", [
+    //         req.body.name,
+    //       ])
+    //     ).rows[0]
+    //   );
       const SQL = "INSERT INTO flavor(name) VALUES($1) RETURNING *";
       const response = await client.query(SQL, [req.body.name]);
       res.send(response.rows[0]);
@@ -42,17 +42,22 @@ app.get("/api/flavor", async (req, res, next) => {
 
   app.put("/api/flavor/:id", async (req, res, next) => {
     try {
-      res.send(
-        (
-          await client.query(
-            "UPDATE flavors SET name=$1 WHERE id=$2 RETURNING *",
-            [req.body.name, req.params.id]
-          )
-        ).rows[0]
-      );
-      const SQL = "UPDATE flavor SET name=$1 WHERE id=$2 RETURNING *";
-      const response = await client.query(SQL, [req.body.name, req.params.id]);
-      res.send(response.rows[0]);
+    //   res.send(
+    //     (
+    //       await client.query(
+    //         "UPDATE flavors SET name=$1 WHERE id=$2 RETURNING *",
+    //         [req.body.name, req.params.id]
+    //       )
+    //     ).rows[0]
+    //   );
+      const SQL = "UPDATE flavor SET name=$1, updated_at= now() WHERE id=$2 RETURNING *";
+      const { rows: [flavor]} = await client.query(SQL, [req.body.name, req.params.id]);
+      // returns an object flavor { rows: [{}, {}, {}]}
+      // const [value, setter] = initializeValue([])
+      // const array = initializeValue([])
+      // const value = array[0]
+      // const setter = array[1]
+      res.send(flavor);
     } catch (ex) {
       next(ex);
     }
@@ -60,13 +65,13 @@ app.get("/api/flavor", async (req, res, next) => {
 
   app.delete("/api/flavor/:id", async (req, res, next) => {
     try {
-      res.send(
-        (
-          await client.query("DELETE FROM flavor WHERE id=$1 RETURNING *", [
-            req.params.id,
-          ])
-        ).rows[0]
-      );
+    //   res.send(
+    //     (
+    //       await client.query("DELETE FROM flavor WHERE id=$1 RETURNING *", [
+    //         req.params.id,
+    //       ])
+    //     ).rows[0]
+    //   );
       const SQL = "DELETE FROM flavor WHERE id=$1 RETURNING *";
       const response = await client.query(SQL, [req.params.id]);
       res.send(response.rows[0]);
@@ -81,15 +86,14 @@ app.get("/api/flavor", async (req, res, next) => {
           DROP TABLE IF EXISTS flavor;
           CREATE TABLE flavor(
               id SERIAL PRIMARY KEY,
-              name VARCHAR(255) NOT NULL
-              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  
+              name VARCHAR(255) NOT NULL,
+              updated_at TIMESTAMP DEFAULT now(),
+              created_at TIMESTAMP DEFAULT now()
           );
-          INSERT INTO flavors(name) VALUES('Vanilla');
-          INSERT INTO flavors(name) VALUES('mango');
-          INSERT INTO flavors(name) VALUES('Cookies&Cream');
-          INSERT INTO flavors(name) VALUES('Pecan');
-          
+          INSERT INTO flavor(name) VALUES('Vanilla');
+          INSERT INTO flavor(name) VALUES('mango');
+          INSERT INTO flavor(name) VALUES('Cookies&Cream');
+          INSERT INTO flavor(name) VALUES('Pecan');
           `;
     await client.query(SQL);
     console.log("database has been seeded");
